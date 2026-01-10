@@ -121,10 +121,14 @@ class ContentProcessor:
         # Simple sentence splitting (can be improved with spaCy or NLTK)
         sentences = re.split(r'(?<=[.!?])\s+', text)
 
-        # Filter out very short sentences
-        sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
+        # Filter out very short sentences, but if input is short, keep the whole text
+        filtered_sentences = [s.strip() for s in sentences if len(s.strip()) > 10]
 
-        return sentences
+        # If no sentences passed the filter but we have text, treat whole text as one sentence
+        if not filtered_sentences and text.strip():
+            filtered_sentences = [text.strip()]
+
+        return filtered_sentences
 
     def _extract_claims(self, sentences: List[str]) -> List[str]:
         """Extract potential factual claims from sentences.
@@ -140,6 +144,10 @@ class ContentProcessor:
         """
         claims = []
 
+        # If no sentences extracted, treat empty as no claims
+        if not sentences:
+            return claims
+
         # Keywords that often indicate factual claims
         claim_indicators = [
             r'\d+%',  # Percentages
@@ -148,13 +156,16 @@ class ContentProcessor:
             r'(is|are|was|were)\s+(the|a)\s+',  # Definitive statements
             r'(first|largest|biggest|most|least)',  # Superlatives
             r'(every|all|no|none)',  # Absolutes
+            r'(cause|causes|caused)',  # Causation claims
+            r'(contain|contains)',  # Content claims
         ]
 
         for sentence in sentences:
             # Check if sentence contains claim indicators
             for indicator in claim_indicators:
                 if re.search(indicator, sentence, re.IGNORECASE):
-                    claims.append(sentence)
+                    if sentence not in claims:
+                        claims.append(sentence)
                     break
 
             # Also include sentences with certain patterns
@@ -184,13 +195,34 @@ class ContentProcessor:
             return False
 
         # Filter out personal opinions
-        opinion_markers = ['i think', 'i believe', 'in my opinion', 'i feel', 'seems like']
+        opinion_markers = ['i think', 'i believe', 'in my opinion', 'i feel', 'seems like', 'maybe', 'perhaps']
         if any(marker in sentence.lower() for marker in opinion_markers):
             return False
 
-        # Check for factual indicators
-        factual_verbs = ['is', 'are', 'was', 'were', 'has', 'have', 'will', 'shows', 'proves']
-        if any(f' {verb} ' in sentence.lower() for verb in factual_verbs):
+        # Most declarative sentences are potential claims
+        # Check for common verbs and structures
+        sentence_lower = sentence.lower()
+
+        # Factual verbs and patterns
+        factual_patterns = [
+            ' is ', ' are ', ' was ', ' were ',
+            ' has ', ' have ', ' had ',
+            ' will ', ' would ', ' should ',
+            ' can ', ' cannot ', ' can\'t ',
+            ' does ', ' do ', ' did ',
+            ' shows ', ' proves ', ' demonstrates ',
+            ' cause ', ' causes ', ' caused ',
+            ' contain ', ' contains ', ' contained ',
+            ' make ', ' makes ', ' made ',
+            ' create ', ' creates ', ' created ',
+            ' lead ', ' leads ', ' led ',
+            'don\'t ', 'doesn\'t ', 'didn\'t ',
+            'won\'t ', 'wouldn\'t ', 'shouldn\'t ',
+        ]
+
+        if any(pattern in sentence_lower for pattern in factual_patterns):
             return True
 
-        return False
+        # If we got here, it's probably still a claim (be inclusive)
+        # Better to over-identify than miss claims
+        return True

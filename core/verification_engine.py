@@ -7,6 +7,7 @@ from core.models import Verdict, VerificationResult
 from core.content_processor import ContentProcessor
 from core.hybrid_decisor import HybridDecisor, VerificationStrategy
 from core.result_aggregator import ResultAggregator
+from core.claims_database import ClaimsDatabase
 from cloud.google_factcheck import GoogleFactCheckClient
 from cloud.claimbuster import ClaimBusterClient
 from cloud.factiverse import FactiverseClient
@@ -123,7 +124,7 @@ class VerificationEngine:
             )
 
     async def _verify_local(self, content) -> VerificationResult:
-        """Perform local verification using local models.
+        """Perform local verification using claims database.
 
         Args:
             content: Processed content
@@ -131,10 +132,7 @@ class VerificationEngine:
         Returns:
             Verification result
         """
-        self.logger.debug("Running local verification")
-
-        # TODO: Implement actual local model verification
-        # For now, return a basic result based on simple heuristics
+        self.logger.debug("Running local verification with claims database")
 
         # Check if no claims found
         if not content.has_claims:
@@ -150,32 +148,32 @@ class VerificationEngine:
                 metadata=content.metadata
             )
 
-        # Basic sentiment-based placeholder
-        # In real implementation, this would use trained models
-        text_lower = content.cleaned_text.lower()
+        # Search claims database for each claim
+        for claim in content.claims:
+            found, claim_data = ClaimsDatabase.search(claim)
 
-        # Check for obvious false claim patterns (very basic)
-        false_indicators = ['earth is flat', 'vaccines cause autism', '5g causes covid']
-        if any(indicator in text_lower for indicator in false_indicators):
-            return VerificationResult(
-                verdict=Verdict.FALSE,
-                confidence=95.0,
-                explanation="This claim has been repeatedly debunked by scientific evidence.",
-                sources=["Scientific consensus"],
-                evidence=["Multiple peer-reviewed studies contradict this claim"],
-                strategy_used=VerificationStrategy.LOCAL_ONLY,
-                processing_time=0.0,
-                timestamp=datetime.now(),
-                metadata=content.metadata
-            )
+            if found:
+                self.logger.info(f"Found claim in database: {claim[:50]}...")
+                return VerificationResult(
+                    verdict=claim_data["verdict"],
+                    confidence=claim_data["confidence"],
+                    explanation=claim_data["explanation"],
+                    sources=claim_data["sources"],
+                    evidence=claim_data["evidence"],
+                    strategy_used=VerificationStrategy.LOCAL_ONLY,
+                    processing_time=0.0,
+                    timestamp=datetime.now(),
+                    metadata=content.metadata
+                )
 
-        # Default: uncertain with local only
+        # No match found in database
+        self.logger.debug("No claims found in database, returning uncertain")
         return VerificationResult(
             verdict=Verdict.UNCERTAIN,
             confidence=40.0,
-            explanation="Local analysis completed. Cloud verification recommended for higher confidence.",
-            sources=["Local model analysis"],
-            evidence=[f"Identified {len(content.claims)} claim(s) requiring fact-checking"],
+            explanation="Claim not found in local database. Cloud verification recommended for comprehensive fact-checking.",
+            sources=["Local claims database"],
+            evidence=[f"Analyzed {len(content.claims)} claim(s)", "No matches in known claims database"],
             strategy_used=VerificationStrategy.LOCAL_ONLY,
             processing_time=0.0,
             timestamp=datetime.now(),
