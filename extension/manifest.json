@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "CircleNClick",
+  "version": "0.1.0",
+  "description": "Content verification tool - Circle & Click to verify any content on Facebook, X, and Threads",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://www.facebook.com/*",
+    "https://facebook.com/*",
+    "https://twitter.com/*",
+    "https://x.com/*",
+    "https://www.threads.net/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.facebook.com/*",
+        "https://facebook.com/*",
+        "https://twitter.com/*",
+        "https://x.com/*",
+        "https://www.threads.net/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "CircleNClick Verifier"
+  },
+  "commands": {
+    "activate-selector": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Activate Circle & Click selector"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["overlay.html", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

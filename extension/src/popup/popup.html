@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CircleNClick</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 400px;
+      min-height: 500px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #1f2937;
+      background: #f9fafb;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .tab:hover {
+      background: #f9fafb;
+    }
+
+    .tab.active {
+      color: #4A90E2;
+      border-bottom-color: #4A90E2;
+    }
+
+    .content {
+      padding: 16px;
+      background: white;
+      min-height: 400px;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .status-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .status-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-label {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .status-value {
+      font-weight: 500;
+    }
+
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .status-badge.online {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-badge.offline {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .button {
+      width: 100%;
+      padding: 10px;
+      background: #4A90E2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .button:hover {
+      background: #357ABD;
+    }
+
+    .button.secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .button.secondary:hover {
+      background: #d1d5db;
+    }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: #374151;
+    }
+
+    .setting-description {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      border-color: #4A90E2;
+      background: white;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .history-verdict {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .history-time {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .history-text {
+      font-size: 12px;
+      color: #6b7280;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .footer {
+      padding: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .footer a {
+      color: #4A90E2;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .verdict-TRUE { color: #059669; }
+    .verdict-FALSE { color: #dc2626; }
+    .verdict-MISLEADING { color: #d97706; }
+    .verdict-UNVERIFIABLE { color: #6b7280; }
+    .verdict-UNCERTAIN { color: #8b5cf6; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CircleNClick</h1>
+    <p>Content Verification Tool</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="status">Status</div>
+    <div class="tab" data-tab="settings">Settings</div>
+    <div class="tab" data-tab="history">History</div>
+  </div>
+
+  <div class="content">
+    <!-- Status Tab -->
+    <div class="tab-panel active" id="status-panel">
+      <div class="status-card">
+        <div class="status-row">
+          <span class="status-label">Backend Status</span>
+          <span class="status-badge" id="backend-status">Checking...</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Cloud APIs</span>
+          <span id="cloud-apis-status">-</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Cache</span>
+          <span id="cache-status">-</span>
+        </div>
+      </div>
+
+      <button class="button" id="activate-btn">
+        Activate Circle & Click
+      </button>
+
+      <div style="margin-top: 12px;">
+        <button class="button secondary" id="refresh-btn">
+          Refresh Status
+        </button>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-panel" id="settings-panel">
+      <div class="setting-group">
+        <label class="setting-label">Verification Strategy</label>
+        <select id="strategy-select">
+          <option value="hybrid">Hybrid (Recommended)</option>
+          <option value="local">Local Only (Fast)</option>
+          <option value="cloud">Cloud Only (Thorough)</option>
+        </select>
+        <div class="setting-description">
+          Choose how content should be verified
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Auto-activate on supported sites</label>
+        <div class="checkbox-group">
+          <input type="checkbox" id="auto-activate">
+          <span class="setting-description">Automatically show Circle & Click on Facebook, X, and Threads</span>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Keyboard Shortcut</label>
+        <input type="text" value="Ctrl+Shift+C" disabled>
+        <div class="setting-description">
+          Activate verification mode (configure in browser settings)
+        </div>
+      </div>
+
+      <button class="button" id="save-settings-btn">
+        Save Settings
+      </button>
+
+      <div style="margin-top: 12px;">
+        <button class="button secondary" id="clear-cache-btn">
+          Clear Cache
+        </button>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-panel" id="history-panel">
+      <div class="history-list" id="history-list">
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <div>No verification history yet</div>
+          <div style="margin-top: 8px; font-size: 12px;">
+            Start verifying content to see your history
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <button class="button secondary" id="clear-history-btn">
+          Clear History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    CircleNClick v0.1.0 • <a href="https://github.com/poku0857643/CirclenClick" target="_blank">GitHub</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

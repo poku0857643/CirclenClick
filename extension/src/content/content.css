@@ -1,0 +1,24 @@
+/**
+ * Content Script Styles
+ * Basic styles injected into the page
+ */
+
+/* Prevent selection while in Circle & Click mode */
+body.circlenclick-selecting {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Hide default selection highlight during Circle & Click */
+body.circlenclick-selecting::selection {
+  background: transparent;
+}
+
+/* Ensure CircleNClick overlays are always on top */
+.circlenclick-result-overlay,
+#circlenclick-selection-overlay,
+#circlenclick-instructions {
+  z-index: 2147483647 !important;
+}

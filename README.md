@@ -35,9 +35,18 @@ CircleNClick is a content verification tool that helps you identify misinformati
 - Verification endpoints with auto-docs
 - Installation scripts and manifest generator
 
+✅ **Phase 4 Complete**: Browser Extension
+- Circle & Click visual selection interface
+- Content scripts for Facebook, X, and Threads
+- Background service worker with native messaging
+- Beautiful result overlays with verdict visualization
+- Popup UI with settings and history
+- TypeScript + Webpack build system
+- Extension icons and full packaging
+
 📝 **Next Phases**:
-- Phase 4: Browser extension development
 - Phase 5: MCP integration for LLM-powered fact-checking
+- Phase 6: Chrome Web Store and Firefox Add-ons distribution
 
 ## Installation
 
@@ -70,7 +79,44 @@ cp .env.example .env
 # Edit .env with your API keys
 ```
 
+5. Install native messaging host (required for browser extension):
+```bash
+python scripts/setup_native_host.py
+```
+
+### Browser Extension Setup
+
+1. Build the extension:
+```bash
+cd extension
+npm install
+npm run build
+```
+
+2. Load in Chrome:
+   - Navigate to `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select `extension/dist/` directory
+
+3. Load in Firefox:
+   - Navigate to `about:debugging#/runtime/this-firefox`
+   - Click "Load Temporary Add-on"
+   - Select any file in `extension/dist/`
+
 ## Usage
+
+### Browser Extension (Circle & Click)
+
+1. **Activate**: Click extension icon or press `Ctrl+Shift+C` (Mac: `Cmd+Shift+C`)
+2. **Select**: Click and drag to select content on Facebook, X, or Threads
+3. **Verify**: Release to submit for verification
+4. **Results**: View verdict overlay with confidence, evidence, and sources
+
+**Supported Platforms**:
+- Facebook (facebook.com)
+- X / Twitter (x.com, twitter.com)
+- Threads (threads.net)
 
 ### CLI Commands
 
