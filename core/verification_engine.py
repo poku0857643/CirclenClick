@@ -8,6 +8,7 @@ from core.content_processor import ContentProcessor
 from core.hybrid_decisor import HybridDecisor, VerificationStrategy
 from core.result_aggregator import ResultAggregator
 from core.claims_database import ClaimsDatabase
+from model.semantic_classifier import get_semantic_classifier
 from cloud.google_factcheck import GoogleFactCheckClient
 from cloud.claimbuster import ClaimBusterClient
 from cloud.factiverse import FactiverseClient
@@ -28,12 +29,17 @@ class VerificationEngine:
         self.hybrid_decisor = HybridDecisor()
         self.result_aggregator = ResultAggregator()
 
+        # Initialize semantic classifier for ML-powered matching
+        self.semantic_classifier = get_semantic_classifier()
+
         # Initialize cloud API clients
         self.google_client = GoogleFactCheckClient()
         self.claimbuster_client = ClaimBusterClient()
         self.factiverse_client = FactiverseClient()
 
-        self.logger.info("VerificationEngine initialized")
+        # Log model info
+        model_info = self.semantic_classifier.get_model_info()
+        self.logger.info(f"VerificationEngine initialized with semantic classifier: {model_info}")
 
     async def verify(
         self,
@@ -124,7 +130,7 @@ class VerificationEngine:
             )
 
     async def _verify_local(self, content) -> VerificationResult:
-        """Perform local verification using claims database.
+        """Perform local verification using claims database and semantic matching.
 
         Args:
             content: Processed content
@@ -132,7 +138,7 @@ class VerificationEngine:
         Returns:
             Verification result
         """
-        self.logger.debug("Running local verification with claims database")
+        self.logger.debug("Running local verification with claims database and semantic classifier")
 
         # Check if no claims found
         if not content.has_claims:
@@ -148,12 +154,13 @@ class VerificationEngine:
                 metadata=content.metadata
             )
 
-        # Search claims database for each claim
+        # Try each claim
         for claim in content.claims:
+            # STEP 1: Try exact/fuzzy database matching first (fastest)
             found, claim_data = ClaimsDatabase.search(claim)
 
             if found:
-                self.logger.info(f"Found claim in database: {claim[:50]}...")
+                self.logger.info(f"Exact match found in database: {claim[:50]}...")
                 return VerificationResult(
                     verdict=claim_data["verdict"],
                     confidence=claim_data["confidence"],
@@ -166,14 +173,48 @@ class VerificationEngine:
                     metadata=content.metadata
                 )
 
-        # No match found in database
-        self.logger.debug("No claims found in database, returning uncertain")
+            # STEP 2: Try semantic similarity matching (ML-powered)
+            semantic_match = self.semantic_classifier.classify_claim(claim)
+
+            if semantic_match and semantic_match.similarity >= 0.65:
+                self.logger.info(
+                    f"Semantic match found: {semantic_match.claim[:50]}... "
+                    f"(similarity: {semantic_match.similarity:.2f})"
+                )
+
+                # Add note about semantic matching in explanation
+                enhanced_explanation = (
+                    f"{semantic_match.explanation}\n\n"
+                    f"Note: This verdict is based on semantic similarity ({semantic_match.similarity:.0%}) "
+                    f"with a verified claim in our database."
+                )
+
+                return VerificationResult(
+                    verdict=semantic_match.verdict,
+                    confidence=semantic_match.confidence,
+                    explanation=enhanced_explanation,
+                    sources=semantic_match.sources,
+                    evidence=semantic_match.evidence + [
+                        f"Matched similar claim: \"{semantic_match.claim}\""
+                    ],
+                    strategy_used=VerificationStrategy.LOCAL_ONLY,
+                    processing_time=0.0,
+                    timestamp=datetime.now(),
+                    metadata=content.metadata
+                )
+
+        # No match found (exact or semantic)
+        self.logger.debug("No matches found in database or semantic classifier")
         return VerificationResult(
             verdict=Verdict.UNCERTAIN,
             confidence=40.0,
-            explanation="Claim not found in local database. Cloud verification recommended for comprehensive fact-checking.",
-            sources=["Local claims database"],
-            evidence=[f"Analyzed {len(content.claims)} claim(s)", "No matches in known claims database"],
+            explanation="Claim not found in local database and no semantically similar claims identified. Cloud verification recommended for comprehensive fact-checking.",
+            sources=["Local claims database", "Semantic classifier"],
+            evidence=[
+                f"Analyzed {len(content.claims)} claim(s)",
+                "No exact or semantic matches found",
+                "Recommendation: Use cloud verification for unknown claims"
+            ],
             strategy_used=VerificationStrategy.LOCAL_ONLY,
             processing_time=0.0,
             timestamp=datetime.now(),
