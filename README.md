@@ -6,12 +6,14 @@ CircleNClick is a content verification tool that helps you identify misinformati
 
 ## Features
 
-- **Misinformation Detection**: Check if claims are true, false, or misleading
-- **AI-Generated Content Detection**: Identify AI-created text and images
-- **Hybrid Verification**: Combines fast local models with comprehensive cloud APIs
-- **Multi-Platform Support**: Works on Facebook, X (Twitter), and Threads
-- **Human-in-the-Loop**: Provide feedback to improve accuracy
-- **Privacy-First**: Local models process sensitive content on your device
+- **🎯 Misinformation Detection**: Check if claims are true, false, or misleading
+- **🤖 ML-Powered Semantic Matching**: Detects claim variations using sentence transformers
+- **💨 Blazing Fast Local Verification**: <1s response with 14-claim database + semantic matching
+- **☁️ Cloud API Integration**: Access millions of fact-checks from Google, ClaimBuster, Factiverse
+- **🔄 Hybrid Verification**: Combines fast local models with comprehensive cloud APIs
+- **🌐 Multi-Platform Support**: Works on Facebook, X (Twitter), and Threads
+- **🔐 Privacy-First**: Local models process sensitive content on your device
+- **📚 Educational Responses**: Detailed explanations with evidence and authoritative sources
 
 ## Project Status
 
@@ -103,6 +105,31 @@ npm run build
    - Navigate to `about:debugging#/runtime/this-firefox`
    - Click "Load Temporary Add-on"
    - Select any file in `extension/dist/`
+
+### Cloud API Setup (Optional but Recommended)
+
+CircleNClick works offline with local database + ML semantic matching. For broader coverage of millions of claims, enable cloud APIs:
+
+1. **Get API Keys** (all have free tiers):
+   - [Google Fact Check API](https://console.cloud.google.com/) - **RECOMMENDED** (10,000 free requests/day)
+   - [ClaimBuster API](https://idir.uta.edu/claimbuster/) - Academic fact-checking (1,000 free/day)
+   - [Factiverse API](https://www.factiverse.ai/) - Scientific claim verification (paid)
+
+2. **Configure**:
+   ```bash
+   # Copy template
+   cp .env.example .env
+
+   # Add your keys
+   nano .env  # or use any text editor
+   ```
+
+3. **Test**:
+   ```bash
+   python scripts/test_cloud_apis.py
+   ```
+
+**See [docs/API_SETUP.md](docs/API_SETUP.md) for detailed setup instructions.**
 
 ## Usage
 
